@@ -1,59 +1,17 @@
-const {
-  SimplePool,
-  getPublicKey,
-  nip19,
-  nip57,
-  finishEvent,
-} = require("nostr-tools");
+const { SimplePool, nip19, nip57 } = require("nostr-tools");
 const axios = require("axios");
 
 require("websocket-polyfill");
 require("dotenv").config();
 nip57.useFetchImplementation(require("node-fetch"));
 
-const strikeApiKey = process.env.STRIKE_API_KEY;
-const zapRequestSigningKey = nip19.decode(process.env.NOSTR_NSEC).data;
+const { verifyRequiredKeys, signEvent, getPubkey } = require("./keys");
+const {
+  createStrikePaymentQuote,
+  executeStrikePaymentQuote,
+} = require("./strike");
 
-if (!strikeApiKey) {
-  console.log("Please set STRIKE_API_KEY in .env file");
-  process.exit(1);
-}
-
-if (!zapRequestSigningKey) {
-  console.log("Please set a valid NOSTR_NSEC in .env file");
-  process.exit(1);
-}
-
-const createStrikePaymentQuote = async (invoice) => {
-  const { data } = await axios({
-    method: "post",
-    url: "https://api.strike.me/v1/payment-quotes/lightning",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-      Authorization: `Bearer ${strikeApiKey}`,
-    },
-    data: JSON.stringify({
-      lnInvoice: invoice,
-      sourceCurrency: "USD",
-    }),
-  });
-
-  return data.paymentQuoteId;
-};
-
-const executeStrikePaymentQuote = async (paymentQuoteId) => {
-  const { data } = await axios({
-    method: "patch",
-    url: `https://api.strike.me/v1/payment-quotes/${paymentQuoteId}/execute`,
-    headers: {
-      Accept: "application/json",
-      Authorization: `Bearer ${strikeApiKey}`,
-    },
-  });
-
-  return data;
-};
+verifyRequiredKeys();
 
 const getUserProfile = async (pubkey) => {
   const pool = new SimplePool();
@@ -122,10 +80,7 @@ const fetchInvoice = async ({
     relays,
     comment,
   });
-  const signedZapRequestEvent = finishEvent(
-    zapRequestEvent,
-    zapRequestSigningKey
-  );
+  const signedZapRequestEvent = signEvent(zapRequestEvent);
   const url = `${zapEndpoint}?amount=${amountInMillisats}&nostr=${encodeURIComponent(
     JSON.stringify(signedZapRequestEvent)
   )}&comment=${encodeURIComponent(comment)}`;
@@ -175,7 +130,7 @@ const start = async () => {
     "wss://nos.lol",
     "wss://eden.nostr.land",
   ];
-  const pubkey = getPublicKey(zapRequestSigningKey);
+  const pubkey = getPubkey();
   const userRelays = await getUserRelays(pubkey);
 
   if (userRelays?.tags?.length > 0) {
