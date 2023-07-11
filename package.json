@@ -1,0 +1,32 @@
+{
+  "name": "notacomment",
+  "version": "0.1.0",
+  "description": "Zaps nostr notes when you comment on them.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://git@github.com/SamSamskies/notacomment.git"
+  },
+  "keywords": [
+    "bitcoin",
+    "lightning",
+    "nostr"
+  ],
+  "author": "Sam Samskies",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/SamSamskies/notacomment/issues"
+  },
+  "homepage": "https://github.com/SamSamskies/notacomment#readme",
+  "dependencies": {
+    "axios": "^1.4.0",
+    "dotenv": "^16.3.1",
+    "node-fetch": "^2.6.12",
+    "nostr-tools": "^1.12.1",
+    "websocket-polyfill": "^0.0.3"
+  }
+}
