@@ -170,7 +170,10 @@ const start = async () => {
     "wss://relays.nostr.band",
     "wss://relay.damus.io",
     "wss://nostr.wine",
-    "wss://nostr.mutinywallet.com/",
+    "wss://nostr.mutinywallet.com",
+    "wss://nostr-pub.wellorder.net",
+    "wss://nos.lol",
+    "wss://eden.nostr.land",
   ];
   const pubkey = getPublicKey(zapRequestSigningKey);
   const userRelays = await getUserRelays(pubkey);
@@ -180,23 +183,13 @@ const start = async () => {
   }
 
   const pool = new SimplePool();
-  const sub = pool.sub(
-    [
-      "wss://relays.nostr.band",
-      "wss://relay.damus.io",
-      "wss://nostr.wine",
-      "wss://nostr-pub.wellorder.net",
-      "wss://nos.lol",
-      "wss://eden.nostr.land",
-    ],
-    [
-      {
-        kinds: [1],
-        authors: [pubkey],
-        since: Math.round(Date.now() / 1000),
-      },
-    ]
-  );
+  const sub = pool.sub(relays, [
+    {
+      kinds: [1],
+      authors: [pubkey],
+      since: Math.round(Date.now() / 1000),
+    },
+  ]);
 
   console.log("listening for notes to zap...\n");
 
