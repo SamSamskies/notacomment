@@ -192,21 +192,19 @@ const start = async () => {
     [
       {
         kinds: [1],
-        authors: [
-          "604e96e099936a104883958b040b47672e0f048c98ac793f37ffe4c720279eb2",
-        ],
+        authors: [pubkey],
         since: Math.round(Date.now() / 1000),
       },
     ]
   );
 
-  console.log('listening for notes to zap...\n');
+  console.log("listening for notes to zap...\n");
 
   sub.on("event", (event) => {
     const regex = /⚡️\s*(\d+)/;
     const matches = event.content.match(regex);
     if (matches && Number.isInteger(Number(matches[1]))) {
-      const eventTags = (event.tags ?? [])
+      const eventTags = event.tags ?? [];
       const zappedPubkey = eventTags
         .slice()
         .reverse()
@@ -217,7 +215,12 @@ const start = async () => {
         .find((tag) => tag[0] === "e")[1];
 
       if (zappedPubkey && zappedEventId && zappedPubkey !== pubkey) {
-        zap({ zappedPubkey, zappedEventId, relays, amountInSats: Number(matches[1]) });
+        zap({
+          zappedPubkey,
+          zappedEventId,
+          relays,
+          amountInSats: Number(matches[1]),
+        });
       }
     }
   });
