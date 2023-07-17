@@ -7,7 +7,7 @@ Whenever you post a comment that contains a lightning emoji followed by a number
 
 Don't forget to turn off the script when you're done.
 
-## Pre-requisites
+## Prerequisites
 
 Node.js and npm - I suggest installing the latest Node.js LTS version from https://nodejs.org. That should also install npm.
 
