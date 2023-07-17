@@ -6,10 +6,7 @@ require("dotenv").config();
 nip57.useFetchImplementation(require("node-fetch"));
 
 const { verifyRequiredKeys, signEvent, getPubkey } = require("./keys");
-const {
-  createStrikePaymentQuote,
-  executeStrikePaymentQuote,
-} = require("./strike");
+const { payInvoice } = require("./payInvoice");
 
 verifyRequiredKeys();
 
@@ -109,9 +106,8 @@ const zap = async ({ zappedPubkey, zappedEventId, relays, amountInSats }) => {
       zappedEventId,
       amountInSats,
     });
-    const strikePaymentQuoteId = await createStrikePaymentQuote(invoice);
 
-    await executeStrikePaymentQuote(strikePaymentQuoteId);
+    await payInvoice(invoice);
     console.log(
       `successfully zapped ${zappedNpub} for note ${zappedNoteId} ${amountInSats} sats 😎\n`
     );
