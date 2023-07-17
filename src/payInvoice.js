@@ -1,12 +1,8 @@
-const {
-  createStrikePaymentQuote,
-  executeStrikePaymentQuote,
-} = require("./strike");
+const { STRIKE, getPaymentService, LNBITS } = require("./keys");
 
-const payInvoice = async (invoice) => {
-  const strikePaymentQuoteId = await createStrikePaymentQuote(invoice);
-
-  return executeStrikePaymentQuote(strikePaymentQuoteId);
-};
+const payInvoice = {
+  [STRIKE]: require("./strike").payInvoice,
+  [LNBITS]: require("./lnbits").payInvoice,
+}[getPaymentService()];
 
 module.exports = { payInvoice };

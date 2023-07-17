@@ -32,4 +32,10 @@ const executeStrikePaymentQuote = async (paymentQuoteId) => {
   return data;
 };
 
-module.exports = { createStrikePaymentQuote, executeStrikePaymentQuote };
+const payInvoice = async (invoice) => {
+  const strikePaymentQuoteId = await createStrikePaymentQuote(invoice);
+
+  return executeStrikePaymentQuote(strikePaymentQuoteId);
+};
+
+module.exports = { payInvoice };
