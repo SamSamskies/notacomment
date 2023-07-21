@@ -143,7 +143,7 @@ const createSubscription = async (pubkey, relays) => {
   ]);
 };
 
-const handleKind1Events = ({ pubkey, event, relays }) => {
+const handleNoteEvents = ({ pubkey, event, relays }) => {
   const regex = /⚡️\s*(\d+)/;
   const matches = event.content.match(regex);
 
@@ -171,6 +171,6 @@ const handleKind1Events = ({ pubkey, event, relays }) => {
 
 module.exports = {
   createSubscription,
-  handleKind1Events,
+  handleNoteEvents,
   getRelays,
 };

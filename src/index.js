@@ -1,7 +1,7 @@
 require("dotenv").config();
 
 const { verifyRequiredKeys, getPubkey } = require("./keys");
-const { handleKind1Events, createSubscription, getRelays } = require("./nostr");
+const { handleNoteEvents, createSubscription, getRelays } = require("./nostr");
 
 const start = async () => {
   const pubkey = getPubkey();
@@ -12,7 +12,7 @@ const start = async () => {
 
   sub.on("event", (event) => {
     if (event.kind === 1) {
-      handleKind1Events({ pubkey, event, relays });
+      handleNoteEvents({ pubkey, event, relays });
     }
   });
 };
