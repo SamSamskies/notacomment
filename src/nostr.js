@@ -50,6 +50,7 @@ const fetchInvoice = async ({
   relays,
   zappedPubkey,
   zappedEventId,
+  addressPointer,
   amountInSats,
 }) => {
   const amountInMillisats = amountInSats * 1000;
@@ -73,6 +74,11 @@ const fetchInvoice = async ({
     relays,
     comment,
   });
+
+  if (addressPointer) {
+    zapRequestEvent.tags.push(["a", addressPointer]);
+  }
+
   const signedZapRequestEvent = signEvent(zapRequestEvent);
   const url = `${zapEndpoint}?amount=${amountInMillisats}&nostr=${encodeURIComponent(
     JSON.stringify(signedZapRequestEvent)
@@ -87,7 +93,12 @@ const fetchInvoice = async ({
   return invoice;
 };
 
-const zap = async ({ zappedPubkey, zappedEventId, relays, amountInSats }) => {
+const zapNote = async ({
+  zappedPubkey,
+  zappedEventId,
+  relays,
+  amountInSats,
+}) => {
   const zappedNpub = nip19.npubEncode(zappedPubkey);
   const zappedNoteId = nip19.noteEncode(zappedEventId);
 
@@ -106,6 +117,34 @@ const zap = async ({ zappedPubkey, zappedEventId, relays, amountInSats }) => {
     await payInvoice(invoice);
     console.log(
       `successfully zapped ${zappedNpub} for note ${zappedNoteId} ${amountInSats} sats 😎\n`
+    );
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+const zapLiveChatHost = async ({
+  zappedPubkey,
+  addressPointer,
+  relays,
+  amountInSats,
+  title,
+}) => {
+  const zappedNpub = nip19.npubEncode(zappedPubkey);
+
+  console.log(`zapping ${zappedNpub} for ${title} ${amountInSats} sats...`);
+
+  try {
+    const invoice = await fetchInvoice({
+      relays,
+      zappedPubkey,
+      addressPointer,
+      amountInSats,
+    });
+
+    await payInvoice(invoice);
+    console.log(
+      `successfully zapped ${zappedNpub} for ${title} ${amountInSats} sats 😎\n`
     );
   } catch (error) {
     console.error(error);
@@ -136,7 +175,7 @@ const createSubscription = async (pubkey, relays) => {
 
   return pool.sub(relays, [
     {
-      kinds: [1],
+      kinds: [1, 1311],
       authors: [pubkey],
       since: Math.round(Date.now() / 1000),
     },
@@ -159,7 +198,7 @@ const handleNoteEvents = ({ pubkey, event, relays }) => {
       .find((tag) => tag[0] === "e")[1];
 
     if (zappedPubkey && zappedEventId && zappedPubkey !== pubkey) {
-      return zap({
+      return zapNote({
         zappedPubkey,
         zappedEventId,
         relays,
@@ -169,8 +208,44 @@ const handleNoteEvents = ({ pubkey, event, relays }) => {
   }
 };
 
+const handleLiveChatEvents = async ({ pubkey, event, relays }) => {
+  const regex = /⚡️\s*(\d+)/;
+  const matches = event.content.match(regex);
+
+  if (matches && Number.isInteger(Number(matches[1]))) {
+    const addressPointer = (event.tags ?? []).find((tag) => tag[0] === "a")[1];
+    const [kind, _, d] = addressPointer.split(":");
+    const pool = new SimplePool();
+    const liveEvent = await pool.get(relays, {
+      kinds: [Number(kind)],
+      "#d": [d],
+    });
+
+    if (!liveEvent) {
+      console.log("couldn't find live event details");
+    }
+
+    const zappedPubkey =
+      (liveEvent.tags ?? []).find(
+        (tag) => tag[0] === "p" && tag[3] === "host"
+      ) ?? liveEvent.pubkey;
+    const title = (liveEvent.tags ?? []).find((tag) => tag[0] === "title")[1];
+
+    if (zappedPubkey && addressPointer && zappedPubkey !== pubkey) {
+      return zapLiveChatHost({
+        zappedPubkey,
+        addressPointer,
+        relays,
+        amountInSats: Number(matches[1]),
+        title,
+      });
+    }
+  }
+};
+
 module.exports = {
   createSubscription,
   handleNoteEvents,
+  handleLiveChatEvents,
   getRelays,
 };

@@ -1,7 +1,12 @@
 require("dotenv").config();
 
 const { verifyRequiredKeys, getPubkey } = require("./keys");
-const { handleNoteEvents, createSubscription, getRelays } = require("./nostr");
+const {
+  handleNoteEvents,
+  handleLiveChatEvents,
+  createSubscription,
+  getRelays,
+} = require("./nostr");
 
 const start = async () => {
   const pubkey = getPubkey();
@@ -11,8 +16,16 @@ const start = async () => {
   console.log("listening for notes to zap...\n");
 
   sub.on("event", (event) => {
-    if (event.kind === 1) {
-      handleNoteEvents({ pubkey, event, relays });
+    try {
+      if (event.kind === 1) {
+        handleNoteEvents({ pubkey, event, relays });
+      }
+
+      if (event.kind === 1311) {
+        handleLiveChatEvents({ pubkey, event, relays });
+      }
+    } catch (error) {
+      console.error(error);
     }
   });
 };
