@@ -241,8 +241,9 @@ const handleLiveChatEvents = async ({ pubkey, event, relays }) => {
   }
 
   const zappedPubkey =
-    (liveEvent.tags ?? []).find((tag) => tag[0] === "p" && tag[3] === "host") ??
-    liveEvent.pubkey;
+    (liveEvent.tags ?? []).find(
+      (tag) => tag[0] === "p" && tag[3] === "host"
+    )[1] ?? liveEvent.pubkey;
   const title = (liveEvent.tags ?? []).find((tag) => tag[0] === "title")[1];
 
   if (zappedPubkey && addressPointer && zappedPubkey !== pubkey) {
