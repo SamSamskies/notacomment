@@ -54,7 +54,7 @@ const fetchInvoice = async ({
   amountInSats,
 }) => {
   const amountInMillisats = amountInSats * 1000;
-  const comment = "Zapped by notacomment ⚡️";
+  const comment = "Zapped by ice cream so good 🍦";
   const userProfile = await getUserProfile(zappedPubkey);
 
   if (!userProfile) {
@@ -183,14 +183,18 @@ const createSubscription = async (pubkey, relays) => {
 };
 
 const getAmountInSats = (event) => {
-  const regex = /⚡️\s*(\d+)/;
+  const regex = /(?:\u{1F366}|\u{FE0F}\u{20E3})/gu;
   const matches = event.content.match(regex);
 
-  if (matches && Number.isInteger(Number(matches[1]))) {
-    return Number(matches[1]);
-  }
-
-  return 0;
+  return matches ? matches.length * 21 : 0;
+  // const regex = /⚡️\s*(\d+)/;
+  // const matches = event.content.match(regex);
+  //
+  // if (matches && Number.isInteger(Number(matches[1]))) {
+  //   return Number(matches[1]);
+  // }
+  //
+  // return 0;
 };
 
 const handleNoteEvents = ({ pubkey, event, relays }) => {
