@@ -182,64 +182,77 @@ const createSubscription = async (pubkey, relays) => {
   ]);
 };
 
-const handleNoteEvents = ({ pubkey, event, relays }) => {
+const getAmountInSats = (event) => {
   const regex = /⚡️\s*(\d+)/;
   const matches = event.content.match(regex);
 
   if (matches && Number.isInteger(Number(matches[1]))) {
-    const eventTags = event.tags ?? [];
-    const zappedPubkey = eventTags
-      .slice()
-      .reverse()
-      .find((tag) => tag[0] === "p")[1];
-    const zappedEventId = eventTags
-      .slice()
-      .reverse()
-      .find((tag) => tag[0] === "e")[1];
+    return Number(matches[1]);
+  }
 
-    if (zappedPubkey && zappedEventId && zappedPubkey !== pubkey) {
-      return zapNote({
-        zappedPubkey,
-        zappedEventId,
-        relays,
-        amountInSats: Number(matches[1]),
-      });
-    }
+  return 0;
+};
+
+const handleNoteEvents = ({ pubkey, event, relays }) => {
+  const amountInSats = getAmountInSats(event);
+
+  if (amountInSats <= 0) {
+    return;
+  }
+
+  const eventTags = event.tags ?? [];
+  const zappedPubkey = eventTags
+    .slice()
+    .reverse()
+    .find((tag) => tag[0] === "p")[1];
+  const zappedEventId = eventTags
+    .slice()
+    .reverse()
+    .find((tag) => tag[0] === "e")[1];
+
+  if (zappedPubkey && zappedEventId && zappedPubkey !== pubkey) {
+    return zapNote({
+      zappedPubkey,
+      zappedEventId,
+      relays,
+      amountInSats,
+    });
   }
 };
 
 const handleLiveChatEvents = async ({ pubkey, event, relays }) => {
-  const regex = /⚡️\s*(\d+)/;
-  const matches = event.content.match(regex);
+  const amountInSats = getAmountInSats(event);
 
-  if (matches && Number.isInteger(Number(matches[1]))) {
-    const addressPointer = (event.tags ?? []).find((tag) => tag[0] === "a")[1];
-    const [kind, _, d] = addressPointer.split(":");
-    const pool = new SimplePool();
-    const liveEvent = await pool.get(relays, {
-      kinds: [Number(kind)],
-      "#d": [d],
+  if (amountInSats <= 0) {
+    return;
+  }
+
+  const addressPointer = (event.tags ?? []).find((tag) => tag[0] === "a")[1];
+  const [kind, _, d] = addressPointer.split(":");
+  const pool = new SimplePool();
+  const liveEvent = await pool.get(relays, {
+    kinds: [Number(kind)],
+    "#d": [d],
+  });
+
+  if (!liveEvent) {
+    console.log("couldn't find live event details");
+    return;
+  }
+
+  const zappedPubkey =
+    (liveEvent.tags ?? []).find((tag) => tag[0] === "p" && tag[3] === "host") ??
+    liveEvent.pubkey;
+  const title = (liveEvent.tags ?? []).find((tag) => tag[0] === "title")[1];
+
+  if (zappedPubkey && addressPointer && zappedPubkey !== pubkey) {
+    return zapLiveChatHost({
+      zappedPubkey,
+      addressPointer,
+      relays,
+      amountInSats,
+      title,
     });
-
-    if (!liveEvent) {
-      console.log("couldn't find live event details");
-    }
-
-    const zappedPubkey =
-      (liveEvent.tags ?? []).find(
-        (tag) => tag[0] === "p" && tag[3] === "host"
-      ) ?? liveEvent.pubkey;
-    const title = (liveEvent.tags ?? []).find((tag) => tag[0] === "title")[1];
-
-    if (zappedPubkey && addressPointer && zappedPubkey !== pubkey) {
-      return zapLiveChatHost({
-        zappedPubkey,
-        addressPointer,
-        relays,
-        amountInSats: Number(matches[1]),
-        title,
-      });
-    }
   }
 };
 
@@ -248,4 +261,5 @@ module.exports = {
   handleNoteEvents,
   handleLiveChatEvents,
   getRelays,
+  getAmountInSats,
 };
