@@ -1,5 +1,10 @@
 const { finishEvent, getPublicKey, nip19 } = require("nostr-tools");
 
+if (!process.env.NOSTR_NSEC) {
+  console.log("Missing NOSTR_NSEC in .env file");
+  process.exit(1);
+}
+
 const strikeApiKey = process.env.STRIKE_API_KEY;
 const zapRequestSigningKey = nip19.decode(process.env.NOSTR_NSEC).data;
 const lnbitsUrl = process.env.LNBITS_URL;
