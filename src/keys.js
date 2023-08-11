@@ -9,8 +9,10 @@ const strikeApiKey = process.env.STRIKE_API_KEY;
 const zapRequestSigningKey = nip19.decode(process.env.NOSTR_NSEC).data;
 const lnbitsUrl = process.env.LNBITS_URL;
 const lnbitsAdminKey = process.env.LNBITS_ADMIN_KEY;
+const nwcConnectionString = process.env.NWC_CONNECTION_STRING;
 const LNBITS = "lnbits";
 const STRIKE = "strike";
+const NWC = "nwc";
 
 const verifyRequiredKeys = () => {
   if (lnbitsUrl && !lnbitsAdminKey) {
@@ -23,8 +25,12 @@ const verifyRequiredKeys = () => {
     process.exit(1);
   }
 
-  if (!strikeApiKey && !lnbitsUrl && !lnbitsAdminKey) {
-    console.log("Missing STRIKE_API_KEY in .env file");
+  if (!nwcConnectionString && !strikeApiKey && !lnbitsUrl && !lnbitsAdminKey) {
+    console.log("Missing required .env variables");
+    console.log("You must provide one of the following in the .env file:");
+    console.log("1. STRIKE_API_KEY");
+    console.log("2. NWC_CONNECTION_STRING");
+    console.log("3. LNBITS_URL and LNBITS_ADMIN_KEY");
     process.exit(1);
   }
 
@@ -47,16 +53,22 @@ const getPaymentService = () => {
     return STRIKE;
   }
 
+  if (nwcConnectionString) {
+    return NWC;
+  }
+
   return null;
 };
 
 module.exports = {
   strikeApiKey,
   lnbitsAdminKey,
+  nwcConnectionString,
   verifyRequiredKeys,
   getPubkey,
   signEvent,
   getPaymentService,
   LNBITS,
   STRIKE,
+  NWC,
 };

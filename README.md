@@ -30,3 +30,11 @@ I recommend making a separate wallet from your main LNbits wallet for usage with
 1. Install the dependencies using npm or yarn or whatever your heart desires
 1. Make sure you have sats in your LNbits wallet
 1. Run the script `npm start`
+
+## Usage With Nostr Wallet Connect
+
+1. Create a NWC connection string using something like https://nwc.getalby.com/
+1. Create a .env file and provide NOSTR_NSEC and NWC_CONNECTION_STRING values (see .env.example)
+1. Install the dependencies using npm or yarn or whatever your heart desires
+1. Make sure you have sats in your wallet that you generated the NWC connection string with
+1. Run the script `npm start`
