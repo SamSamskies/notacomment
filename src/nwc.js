@@ -1,5 +1,7 @@
 import { nwcConnectionString } from "./keys.js";
-import { nip04, finishEvent, relayInit } from "nostr-tools";
+import { nip04 } from "nostr-tools";
+import { Relay } from "nostr-tools/relay";
+import { finalizeEvent } from "nostr-tools/pure";
 import * as crypto from "node:crypto";
 
 Object.assign(globalThis, crypto);
@@ -36,23 +38,19 @@ const makeNwcRequestEvent = async ({ pubkey, secret, invoice }) => {
     tags: [["p", pubkey]],
   };
 
-  return finishEvent(eventTemplate, secret);
+  return finalizeEvent(eventTemplate, secret);
 };
 
 const openNwcRelayConnection = async () => {
   const { relay: relayUrl } = parseConnectionString(nwcConnectionString);
-  const relay = relayInit(relayUrl);
 
-  relay.on("connect", () => {
+  try {
+    const relay = await Relay.connect(relayUrl);
     console.log(`connected to ${relay.url}`);
-  });
-  relay.on("error", () => {
+    return relay;
+  } catch {
     console.log(`failed to connect to ${relay.url}`);
-  });
-
-  await relay.connect();
-
-  return relay;
+  }
 };
 
 export const payInvoice = async (invoice) => {
@@ -61,26 +59,29 @@ export const payInvoice = async (invoice) => {
   const relay = await openNwcRelayConnection();
 
   return new Promise((resolve, reject) => {
-    const sub = relay.sub([
+    const sub = relay.subscribe(
+      [
+        {
+          kinds: [23195],
+          "#e": [event.id],
+        },
+      ],
       {
-        kinds: [23195],
-        "#e": [event.id],
-      },
-    ]);
+        async onevent(event) {
+          const { result } = JSON.parse(
+            await nip04.decrypt(secret, pubkey, event.content)
+          );
 
-    sub.on("event", async (event) => {
-      const { result } = JSON.parse(
-        await nip04.decrypt(secret, pubkey, event.content)
-      );
+          if (result) {
+            resolve();
+          } else {
+            reject();
+          }
 
-      if (result) {
-        resolve();
-      } else {
-        reject();
+          relay.close();
+        },
       }
-
-      relay.close();
-    });
+    );
 
     relay.publish(event);
   });

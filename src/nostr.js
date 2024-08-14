@@ -2,10 +2,10 @@ import { SimplePool, nip57, nip19 } from "nostr-tools";
 import axios from "axios";
 import { signEvent } from "./keys.js";
 import { payInvoice } from "./payInvoice.js";
-import "websocket-polyfill";
-import fetch from "node-fetch";
+import { useWebSocketImplementation } from "nostr-tools/pool";
+import WebSocket from "ws";
 
-nip57.useFetchImplementation(fetch);
+useWebSocketImplementation(WebSocket);
 
 const getUserProfile = async (pubkey) => {
   const pool = new SimplePool();
@@ -174,13 +174,31 @@ export const getRelays = async (pubkey) => {
 export const createSubscription = async (pubkey, relays) => {
   const pool = new SimplePool();
 
-  return pool.sub(relays, [
+  return pool.subscribeMany(
+    relays,
+    [
+      {
+        kinds: [1, 1311],
+        authors: [pubkey],
+        since: Math.round(Date.now() / 1000),
+      },
+    ],
     {
-      kinds: [1, 1311],
-      authors: [pubkey],
-      since: Math.round(Date.now() / 1000),
-    },
-  ]);
+      onevent(event) {
+        try {
+          if (event.kind === 1) {
+            handleNoteEvents({ pubkey, event, relays });
+          }
+
+          if (event.kind === 1311) {
+            handleLiveChatEvents({ pubkey, event, relays });
+          }
+        } catch (error) {
+          console.error(error);
+        }
+      },
+    }
+  );
 };
 
 export const getAmountInSats = (event) => {

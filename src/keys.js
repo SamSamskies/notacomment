@@ -1,4 +1,5 @@
-import { finishEvent, getPublicKey, nip19 } from "nostr-tools";
+import { nip19 } from "nostr-tools";
+import { finalizeEvent, getPublicKey } from "nostr-tools/pure";
 
 if (!process.env.NOSTR_NSEC) {
   console.log("Missing NOSTR_NSEC in .env file");
@@ -42,7 +43,7 @@ export const verifyRequiredKeys = () => {
 
 export const getPubkey = () => getPublicKey(zapRequestSigningKey);
 
-export const signEvent = (event) => finishEvent(event, zapRequestSigningKey);
+export const signEvent = (event) => finalizeEvent(event, zapRequestSigningKey);
 
 export const getPaymentService = () => {
   if (lnbitsUrl && lnbitsAdminKey) {
