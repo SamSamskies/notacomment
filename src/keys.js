@@ -1,5 +1,5 @@
-import { nip19 } from "nostr-tools";
 import { finalizeEvent, getPublicKey } from "nostr-tools/pure";
+import { getSigningKey } from "./nostr.js";
 
 if (!process.env.NOSTR_NSEC) {
   console.log("Missing NOSTR_NSEC in .env file");
@@ -7,7 +7,7 @@ if (!process.env.NOSTR_NSEC) {
 }
 
 export const strikeApiKey = process.env.STRIKE_API_KEY;
-const zapRequestSigningKey = nip19.decode(process.env.NOSTR_NSEC).data;
+const zapRequestSigningKey = await getSigningKey(process.env.NOSTR_NSEC);
 const lnbitsUrl = process.env.LNBITS_URL;
 export const lnbitsAdminKey = process.env.LNBITS_ADMIN_KEY;
 export const nwcConnectionString = process.env.NWC_CONNECTION_STRING;

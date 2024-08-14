@@ -1,9 +1,11 @@
 import { SimplePool, nip57, nip19 } from "nostr-tools";
+import { decrypt } from "nostr-tools/nip49";
 import axios from "axios";
 import { signEvent } from "./keys.js";
 import { payInvoice } from "./payInvoice.js";
 import { useWebSocketImplementation } from "nostr-tools/pool";
 import WebSocket from "ws";
+import readline from "readline";
 
 useWebSocketImplementation(WebSocket);
 
@@ -274,4 +276,34 @@ export const handleLiveChatEvents = async ({ pubkey, event, relays }) => {
       title,
     });
   }
+};
+
+let cachedSignedKey = null;
+
+export const getSigningKey = (sec) => {
+  return new Promise((resolve) => {
+    if (cachedSignedKey) {
+      return resolve(cachedSignedKey);
+    }
+
+    if (sec.startsWith("nsec")) {
+      const signingKey = nip19.decode(process.env.NOSTR_NSEC).data;
+
+      cachedSignedKey = signingKey;
+      return resolve(signingKey);
+    }
+
+    const rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout,
+    });
+
+    rl.question("Enter password to decrypt nsec: ", (password) => {
+      const signingKey = decrypt(sec, password);
+
+      cachedSignedKey = signingKey;
+      resolve(signingKey);
+      rl.close();
+    });
+  });
 };

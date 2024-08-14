@@ -3,6 +3,8 @@ import { verifyRequiredKeys, getPubkey } from "./keys.js";
 import { createSubscription, getRelays } from "./nostr.js";
 
 const start = async () => {
+  verifyRequiredKeys();
+
   const pubkey = getPubkey();
   const relays = await getRelays(pubkey);
 
@@ -10,5 +12,4 @@ const start = async () => {
   console.log("listening for notes to zap...\n");
 };
 
-verifyRequiredKeys();
 start();
