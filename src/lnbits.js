@@ -1,7 +1,7 @@
-const axios = require("axios");
-const { lnbitsAdminKey } = require("./keys");
+import axios from "axios";
+import { lnbitsAdminKey } from "./keys.js";
 
-const payInvoice = async (invoice) => {
+export const payInvoice = async (invoice) => {
   const url = `${process.env.LNBITS_URL}/api/v1/payments`;
   const headers = {
     "X-Api-Key": lnbitsAdminKey,
@@ -19,5 +19,3 @@ const payInvoice = async (invoice) => {
 
   return data;
 };
-
-module.exports = { payInvoice };

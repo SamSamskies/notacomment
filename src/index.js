@@ -1,12 +1,11 @@
-require("dotenv").config();
-
-const { verifyRequiredKeys, getPubkey } = require("./keys");
-const {
+import "dotenv/config";
+import { verifyRequiredKeys, getPubkey } from "./keys.js";
+import {
   handleNoteEvents,
   handleLiveChatEvents,
   createSubscription,
   getRelays,
-} = require("./nostr");
+} from "./nostr.js";
 
 const start = async () => {
   const pubkey = getPubkey();

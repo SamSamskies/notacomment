@@ -1,5 +1,5 @@
-const axios = require("axios");
-const { strikeApiKey } = require("./keys");
+import axios from "axios";
+import { strikeApiKey } from "./keys.js";
 
 const createStrikePaymentQuote = async (invoice) => {
   const { data } = await axios({
@@ -32,10 +32,8 @@ const executeStrikePaymentQuote = async (paymentQuoteId) => {
   return data;
 };
 
-const payInvoice = async (invoice) => {
+export const payInvoice = async (invoice) => {
   const strikePaymentQuoteId = await createStrikePaymentQuote(invoice);
 
   return executeStrikePaymentQuote(strikePaymentQuoteId);
 };
-
-module.exports = { payInvoice };

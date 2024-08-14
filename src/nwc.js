@@ -1,7 +1,8 @@
-const { nwcConnectionString } = require("./keys");
-const { nip04, finishEvent, relayInit } = require("nostr-tools");
+import { nwcConnectionString } from "./keys.js";
+import { nip04, finishEvent, relayInit } from "nostr-tools";
+import * as crypto from "node:crypto";
 
-globalThis.crypto = require("node:crypto");
+Object.assign(globalThis, crypto);
 
 const parseConnectionString = (connectionString) => {
   const { pathname, hostname, searchParams } = new URL(connectionString);
@@ -54,7 +55,7 @@ const openNwcRelayConnection = async () => {
   return relay;
 };
 
-const payInvoice = async (invoice) => {
+export const payInvoice = async (invoice) => {
   const { pubkey, secret } = parseConnectionString(nwcConnectionString);
   const event = await makeNwcRequestEvent({ pubkey, secret, invoice });
   const relay = await openNwcRelayConnection();
@@ -84,5 +85,3 @@ const payInvoice = async (invoice) => {
     relay.publish(event);
   });
 };
-
-module.exports = { payInvoice };

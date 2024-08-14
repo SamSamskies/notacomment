@@ -1,10 +1,11 @@
-const { SimplePool, nip57, nip19 } = require("nostr-tools");
-const axios = require("axios");
-const { signEvent } = require("./keys");
-const { payInvoice } = require("./payInvoice");
+import { SimplePool, nip57, nip19 } from "nostr-tools";
+import axios from "axios";
+import { signEvent } from "./keys.js";
+import { payInvoice } from "./payInvoice.js";
+import "websocket-polyfill";
+import fetch from "node-fetch";
 
-require("websocket-polyfill");
-nip57.useFetchImplementation(require("node-fetch"));
+nip57.useFetchImplementation(fetch);
 
 const getUserProfile = async (pubkey) => {
   const pool = new SimplePool();
@@ -151,7 +152,7 @@ const zapLiveChatHost = async ({
   }
 };
 
-const getRelays = async (pubkey) => {
+export const getRelays = async (pubkey) => {
   let relays = [
     "wss://relays.nostr.band",
     "wss://relay.damus.io",
@@ -170,7 +171,7 @@ const getRelays = async (pubkey) => {
   return relays;
 };
 
-const createSubscription = async (pubkey, relays) => {
+export const createSubscription = async (pubkey, relays) => {
   const pool = new SimplePool();
 
   return pool.sub(relays, [
@@ -182,7 +183,7 @@ const createSubscription = async (pubkey, relays) => {
   ]);
 };
 
-const getAmountInSats = (event) => {
+export const getAmountInSats = (event) => {
   const regex = /⚡️\s*(\d+)/;
   const matches = event.content.match(regex);
 
@@ -193,7 +194,7 @@ const getAmountInSats = (event) => {
   return 0;
 };
 
-const handleNoteEvents = ({ pubkey, event, relays }) => {
+export const handleNoteEvents = ({ pubkey, event, relays }) => {
   const amountInSats = getAmountInSats(event);
 
   if (amountInSats <= 0) {
@@ -220,7 +221,7 @@ const handleNoteEvents = ({ pubkey, event, relays }) => {
   }
 };
 
-const handleLiveChatEvents = async ({ pubkey, event, relays }) => {
+export const handleLiveChatEvents = async ({ pubkey, event, relays }) => {
   const amountInSats = getAmountInSats(event);
 
   if (amountInSats <= 0) {
@@ -255,12 +256,4 @@ const handleLiveChatEvents = async ({ pubkey, event, relays }) => {
       title,
     });
   }
-};
-
-module.exports = {
-  createSubscription,
-  handleNoteEvents,
-  handleLiveChatEvents,
-  getRelays,
-  getAmountInSats,
 };
