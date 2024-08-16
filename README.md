@@ -15,7 +15,7 @@ Node.js and npm - I suggest installing the latest Node.js LTS version from https
 
 1. Create an account with Strike if you don't already have one https://strike.me/download/
 1. Get a Strike API key with all the payment scopes from https://dashboard.strike.me/
-1. Create a .env file and provide NOSTR_NSEC and STRIKE_API_KEY values (see .env.example)
+1. Create a .env file and provide NSEC_BUNKER_URI (recommended) or NOSTR_NSEC and STRIKE_API_KEY values (see .env.example)
 1. Install the dependencies using npm or yarn or whatever your heart desires
 1. Make sure you have money in your Strike account
 1. Run the script `npm start`
@@ -26,7 +26,7 @@ Keep in mind that Strike pays the invoices from your cash balance. This means th
 
 I recommend making a separate wallet from your main LNbits wallet for usage with notacomment in case you accidentally leak the admin key.
 
-1. Create a .env file and provide NOSTR_NSEC, LNBITS_ADMIN_KEY, and LNBITS_URL values (see .env.example)
+1. Create a .env file and provide NSEC_BUNKER_URI (recommended) or NOSTR_NSEC, LNBITS_ADMIN_KEY, and LNBITS_URL values (see .env.example)
 1. Install the dependencies using npm or yarn or whatever your heart desires
 1. Make sure you have sats in your LNbits wallet
 1. Run the script `npm start`
@@ -34,7 +34,7 @@ I recommend making a separate wallet from your main LNbits wallet for usage with
 ## Usage With Nostr Wallet Connect
 
 1. Create a NWC connection string using something like https://nwc.getalby.com/
-1. Create a .env file and provide NOSTR_NSEC and NWC_CONNECTION_STRING values (see .env.example)
+1. Create a .env file and provide NSEC_BUNKER_URI (recommended) or NOSTR_NSEC and NWC_CONNECTION_STRING values (see .env.example)
 1. Install the dependencies using npm or yarn or whatever your heart desires
 1. Make sure you have sats in your wallet that you generated the NWC connection string with
 1. Run the script `npm start`
