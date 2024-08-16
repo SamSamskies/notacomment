@@ -1,5 +1,7 @@
 import { SimplePool, nip57, nip19 } from "nostr-tools";
+import { generateSecretKey } from "nostr-tools/pure";
 import { decrypt } from "nostr-tools/nip49";
+import { parseBunkerInput, BunkerSigner } from "nostr-tools/nip46";
 import axios from "axios";
 import { signEvent } from "./keys.js";
 import { payInvoice } from "./payInvoice.js";
@@ -82,7 +84,7 @@ const fetchInvoice = async ({
     zapRequestEvent.tags.push(["a", addressPointer]);
   }
 
-  const signedZapRequestEvent = signEvent(zapRequestEvent);
+  const signedZapRequestEvent = await signEvent(zapRequestEvent);
   const url = `${zapEndpoint}?amount=${amountInMillisats}&nostr=${encodeURIComponent(
     JSON.stringify(signedZapRequestEvent)
   )}&comment=${encodeURIComponent(comment)}`;
@@ -282,6 +284,10 @@ let cachedSignedKey = null;
 
 export const getSigningKey = (sec) => {
   return new Promise((resolve) => {
+    if (!sec) {
+      return resolve(null);
+    }
+
     if (cachedSignedKey) {
       return resolve(cachedSignedKey);
     }
@@ -306,4 +312,33 @@ export const getSigningKey = (sec) => {
       rl.close();
     });
   });
+};
+
+export const createBunkerSigner = async (
+  bunkerUri,
+  willValidateWithBunkerWithPing
+) => {
+  const bunkerPointer = await parseBunkerInput(bunkerUri);
+
+  if (!bunkerPointer) {
+    return null;
+  }
+
+  const sk = generateSecretKey();
+  const bunkerSigner = new BunkerSigner(sk, bunkerPointer);
+
+  console.log("trying to connect to bunker...");
+  await bunkerSigner.connect();
+
+  if (willValidateWithBunkerWithPing) {
+    console.log("attempting ping bunker...");
+    const pingRes = await bunkerSigner.sendRequest("ping", []);
+    console.log(pingRes);
+
+    if (pingRes !== "pong") {
+      return null;
+    }
+  }
+
+  return bunkerSigner;
 };

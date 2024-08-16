@@ -1,13 +1,10 @@
 import { finalizeEvent, getPublicKey } from "nostr-tools/pure";
-import { getSigningKey } from "./nostr.js";
-
-if (!process.env.NOSTR_NSEC) {
-  console.log("Missing NOSTR_NSEC in .env file");
-  process.exit(1);
-}
+import { createBunkerSigner, getSigningKey } from "./nostr.js";
 
 export const strikeApiKey = process.env.STRIKE_API_KEY;
 const zapRequestSigningKey = await getSigningKey(process.env.NOSTR_NSEC);
+const bunkerUri = process.env.NSEC_BUNKER_URI;
+let bunkerSigner = "";
 const lnbitsUrl = process.env.LNBITS_URL;
 export const lnbitsAdminKey = process.env.LNBITS_ADMIN_KEY;
 export const nwcConnectionString = process.env.NWC_CONNECTION_STRING;
@@ -15,7 +12,7 @@ export const LNBITS = "lnbits";
 export const STRIKE = "strike";
 export const NWC = "nwc";
 
-export const verifyRequiredKeys = () => {
+export const verifyRequiredKeys = async () => {
   if (lnbitsUrl && !lnbitsAdminKey) {
     console.log("Missing LNBITS_ADMIN_KEY in .env file");
     process.exit(1);
@@ -35,15 +32,39 @@ export const verifyRequiredKeys = () => {
     process.exit(1);
   }
 
-  if (!zapRequestSigningKey) {
+  if (!zapRequestSigningKey && !bunkerUri) {
     console.log("Missing a valid NOSTR_NSEC in .env file");
+    process.exit(1);
+  }
+
+  if (zapRequestSigningKey && !bunkerUri) {
+    return;
+  }
+
+  bunkerSigner = await createBunkerSigner(bunkerUri, true);
+
+  if (!bunkerSigner) {
+    console.log("Missing a valid NSEC_BUNKER_URI in .env file");
     process.exit(1);
   }
 };
 
-export const getPubkey = () => getPublicKey(zapRequestSigningKey);
+export const getPubkey = async () =>
+  bunkerSigner
+    ? await bunkerSigner.getPublicKey()
+    : getPublicKey(zapRequestSigningKey);
 
-export const signEvent = (event) => finalizeEvent(event, zapRequestSigningKey);
+export const signEvent = async (event) => {
+  if (bunkerSigner) {
+    const signedEvent = await bunkerSigner.sendRequest("sign_event", [
+      JSON.stringify(event),
+    ]);
+
+    return JSON.parse(signedEvent);
+  }
+
+  return finalizeEvent(event, zapRequestSigningKey);
+};
 
 export const getPaymentService = () => {
   if (lnbitsUrl && lnbitsAdminKey) {

@@ -3,9 +3,9 @@ import { verifyRequiredKeys, getPubkey } from "./keys.js";
 import { createSubscription, getRelays } from "./nostr.js";
 
 const start = async () => {
-  verifyRequiredKeys();
+  await verifyRequiredKeys();
 
-  const pubkey = getPubkey();
+  const pubkey = await getPubkey();
   const relays = await getRelays(pubkey);
 
   await createSubscription(pubkey, relays);
