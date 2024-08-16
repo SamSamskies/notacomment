@@ -7,7 +7,7 @@ import { signEvent } from "./keys.js";
 import { payInvoice } from "./payInvoice.js";
 import { useWebSocketImplementation } from "nostr-tools/pool";
 import WebSocket from "ws";
-import readline from "readline";
+import readlineSync from "readline-sync";
 
 useWebSocketImplementation(WebSocket);
 
@@ -299,18 +299,14 @@ export const getSigningKey = (sec) => {
       return resolve(signingKey);
     }
 
-    const rl = readline.createInterface({
-      input: process.stdin,
-      output: process.stdout,
+    const password = readlineSync.question("Enter password to decrypt nsec: ", {
+      hideEchoBack: true, // This option masks the input
     });
 
-    rl.question("Enter password to decrypt nsec: ", (password) => {
-      const signingKey = decrypt(sec, password);
+    const signingKey = decrypt(sec, password);
 
-      cachedSignedKey = signingKey;
-      resolve(signingKey);
-      rl.close();
-    });
+    cachedSignedKey = signingKey;
+    resolve(signingKey);
   });
 };
 
